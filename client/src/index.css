@@ -1,0 +1,27 @@
+@import "tailwindcss" source("./");
+
+/* Цвета и шрифты приложения: доступны как bg-paper, text-muted, border-line и т. д. */
+@theme {
+  --color-paper: #f6f3ee;
+  --color-ink: #2b2622;
+  --color-muted: #7a716a;
+  --color-line: #e5dfd7;
+  --color-accent: #8b4a2b;
+  --color-ok: #2f7a4b;
+  --color-danger: #b23a3a;
+  --color-gold: #e0a526;
+  --font-serif: Georgia, serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-paper font-sans text-ink;
+  }
+  h1, h2 {
+    @apply font-serif font-bold;
+  }
+  h3 {
+    @apply font-bold;
+  }
+}
