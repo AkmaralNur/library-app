@@ -1,0 +1,29 @@
+{
+  "name": "library-app",
+  "version": "1.0.0",
+  "description": "Каталог библиотеки: Node.js (Express) + React + Tailwind CSS + SQLite",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "npm run build && node --disable-warning=ExperimentalWarning server.js",
+    "dev": "concurrently -n api,web -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "node --watch --disable-warning=ExperimentalWarning server.js",
+    "dev:client": "vite",
+    "build": "vite build"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.4",
+    "@vitejs/plugin-react": "^6.2.1",
+    "concurrently": "^10.0.6",
+    "tailwindcss": "^4.3.4",
+    "vite": "^8.3.6"
+  }
+}
