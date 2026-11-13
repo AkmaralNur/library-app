@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Библиотека</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <h1>📚 Библиотека</h1>
+      <div id="userBox" class="user-box"></div>
+    </div>
+    <div id="stats" class="stats"></div>
+    <nav id="tabs" class="tabs">
+      <button data-tab="catalog" class="active">Каталог</button>
+      <button data-tab="my" data-role="reader" hidden>Мои книги</button>
+      <button data-tab="loans" data-role="librarian" hidden>Выдачи</button>
+      <button data-tab="readers" data-role="librarian" hidden>Читатели</button>
+      <button data-tab="reports" data-role="librarian" hidden>Отчёты</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Каталог -->
+    <section id="view-catalog">
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Поиск по названию или автору…">
+        <select id="genreFilter"><option value="">Все жанры</option></select>
+        <select id="sort" title="Сортировка">
+          <option value="title">По названию</option>
+          <option value="author">По автору</option>
+          <option value="year">Сначала новые</option>
+          <option value="rating">По рейтингу</option>
+          <option value="popular">Популярные</option>
+        </select>
+        <label class="check"><input id="availableOnly" type="checkbox"> Только в наличии</label>
+        <span class="spacer"></span>
+        <a id="exportBtn" class="button" href="/api/export/books.csv" data-role="librarian" hidden>⬇ CSV</a>
+        <button id="addBtn" class="primary" data-role="librarian" hidden>+ Добавить книгу</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Автор</th>
+            <th>Год</th>
+            <th>Жанр</th>
+            <th>Рейтинг</th>
+            <th>Статус</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="books"></tbody>
+      </table>
+      <p id="empty" class="empty" hidden>Ничего не найдено</p>
+    </section>
+
+    <!-- Мои книги (читатель) -->
+    <section id="view-my" hidden>
+      <div id="myFines" class="hint warn" hidden></div>
+      <h2>На руках</h2>
+      <div id="myActive"></div>
+      <h2>Мои брони</h2>
+      <div id="myReservations"></div>
+      <h2>История</h2>
+      <div id="myHistory"></div>
+    </section>
+
+    <!-- Выдачи (библиотекарь) -->
+    <section id="view-loans" hidden>
+      <div id="holdsList"></div>
+      <div class="toolbar">
+        <select id="loansFilter">
+          <option value="active">На руках</option>
+          <option value="overdue">Просроченные</option>
+          <option value="fines">С неоплаченным штрафом</option>
+          <option value="all">Все выдачи</option>
+        </select>
+      </div>
+      <div id="loansList"></div>
+    </section>
+
+    <!-- Читатели (библиотекарь) -->
+    <section id="view-readers" hidden>
+      <div class="toolbar">
+        <input id="readerSearch" type="search" placeholder="Поиск читателя…">
+        <span class="spacer"></span>
+        <button id="addReaderBtn" class="primary">+ Новый читатель</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Читатель</th><th>Логин</th><th>На руках</th><th>Просрочено</th><th>Штрафы</th><th>Всего выдач</th></tr>
+        </thead>
+        <tbody id="readers"></tbody>
+      </table>
+    </section>
+
+    <!-- Отчёты (библиотекарь) -->
+    <section id="view-reports" hidden>
+      <div id="reportTotals" class="tiles"></div>
+      <div class="report-grid">
+        <div class="card"><h3>Популярные книги</h3><div id="repBooks"></div></div>
+        <div class="card"><h3>Активные читатели</h3><div id="repReaders"></div></div>
+        <div class="card"><h3>Книги по жанрам</h3><div id="repGenres"></div></div>
+        <div class="card"><h3>Выдачи по месяцам</h3><div id="repMonths"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Карточка книги -->
+  <dialog id="bookDialog" class="wide">
+    <button class="close" data-close title="Закрыть">✕</button>
+    <div id="bookCard"></div>
+  </dialog>
+
+  <!-- Добавление / редактирование книги -->
+  <dialog id="formDialog">
+    <form id="form" method="dialog">
+      <h2 id="formTitle">Новая книга</h2>
+      <label>Название <input name="title" required></label>
+      <label>Автор <input name="author" required></label>
+      <div class="row">
+        <label>Год <input name="year" type="number" min="0"></label>
+        <label>Жанр <input name="genre" list="genreList"></label>
+      </div>
+      <datalist id="genreList"></datalist>
+      <div class="cover-field">
+        <img id="coverPreview" class="cover medium" alt="" hidden>
+        <div>
+          <label>Обложка <input id="coverFile" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <label>или ссылка на картинку <input name="cover_url" placeholder="https://…"></label>
+        </div>
+      </div>
+      <label>Описание <textarea name="description" rows="3"></textarea></label>
+      <p id="formError" class="error"></p>
+      <div class="actions">
+        <button type="button" data-close>Отмена</button>
+        <button type="submit" class="primary">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Вход / регистрация -->
+  <dialog id="authDialog">
+    <form id="authForm" method="dialog">
+      <h2 id="authTitle">Вход</h2>
+      <label>Логин <input name="username" required autocomplete="username"></label>
+      <label id="nameField" hidden>Имя и фамилия <input name="name" autocomplete="name"></label>
+      <label>Пароль <input name="password" type="password" required autocomplete="current-password"></label>
+      <p id="authError" class="error"></p>
+      <p class="switch"><a href="#" id="authSwitch">Нет аккаунта? Зарегистрироваться</a></p>
+      <div class="actions">
+        <button type="button" data-close>Отмена</button>
+        <button type="submit" class="primary" id="authSubmit">Войти</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Выдача книги -->
+  <dialog id="issueDialog">
+    <form id="issueForm" method="dialog">
+      <h2>Выдать книгу</h2>
+      <p id="issueBook" class="muted"></p>
+      <label>Читатель <select name="userId" required></select></label>
+      <label>Срок, дней <input name="days" type="number" min="1" max="365" value="14" required></label>
+      <p id="issueError" class="error"></p>
+      <div class="actions">
+        <button type="button" data-close>Отмена</button>
+        <button type="submit" class="primary">Выдать</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Новый читатель -->
+  <dialog id="readerDialog">
+    <form id="readerForm" method="dialog">
+      <h2>Новый читатель</h2>
+      <label>Имя и фамилия <input name="name" required></label>
+      <label>Логин <input name="username" required></label>
+      <label>Пароль <input name="password" required minlength="6"></label>
+      <p id="readerError" class="error"></p>
+      <div class="actions">
+        <button type="button" data-close>Отмена</button>
+        <button type="submit" class="primary">Создать</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Смена пароля -->
+  <dialog id="passwordDialog">
+    <form id="passwordForm" method="dialog">
+      <h2>Смена пароля</h2>
+      <label>Текущий пароль <input name="oldPassword" type="password" required autocomplete="current-password"></label>
+      <label>Новый пароль <input name="newPassword" type="password" required minlength="6" autocomplete="new-password"></label>
+      <p id="passwordError" class="error"></p>
+      <div class="actions">
+        <button type="button" data-close>Отмена</button>
+        <button type="submit" class="primary">Сменить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- История читателя -->
+  <dialog id="infoDialog" class="wide">
+    <button class="close" data-close title="Закрыть">✕</button>
+    <div id="infoBody"></div>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
